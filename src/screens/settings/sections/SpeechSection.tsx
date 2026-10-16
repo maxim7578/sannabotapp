@@ -12,7 +12,6 @@ interface SpeechSectionProps {
 }
 
 export function SpeechSection({
-  sttLanguage,
   onSttLanguageChange,
   sttMode,
   onSttModeChange,

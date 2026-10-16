@@ -187,7 +187,7 @@ export function SkillsSection({
           try {
             const response = await fetch(decodedUri);
             content = await response.text();
-          } catch (e) {
+          } catch {
             // As a last resort, try reading with RNFS in case the provider exposes it
             content = await RNFS.readFile(decodedUri, 'utf8');
           }

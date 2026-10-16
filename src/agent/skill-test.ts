@@ -30,7 +30,7 @@ export async function runSkillTest(
   skillLoader: SkillLoader,
   provider: LLMProvider,
   toolRegistry: ToolRegistry,
-  model: string,
+  _model: string,
 ): Promise<SkillTestResult> {
   if (!skill.testPrompt) {
     return {

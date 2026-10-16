@@ -40,7 +40,6 @@ import type { PipelineState } from './src/agent/conversation-pipeline';
 import { createToolRegistry } from './src/agent/create-tool-registry';
 import { runSkillTest } from './src/agent/skill-test';
 import { createLLMProvider } from './src/llm/llm-registry';
-import { OpenAIProvider } from './src/llm/openai-provider';
 import { TTSService } from './src/audio/tts-service';
 import { STTService } from './src/audio/stt-service';
 import { WakeWordService } from './src/audio/wake-word-service';
@@ -86,7 +85,6 @@ import { ListsScreen } from './src/screens/ListsScreen';
 import { SchedulesScreen } from './src/screens/SchedulesScreen';
 import { NotificationListenersScreen } from './src/screens/NotificationListenersScreen';
 import { JournalScreen } from './src/screens/JournalScreen';
-import type { SkillInfo } from './src/agent/skill-loader';
 import { SannaAvatar } from './src/components/SannaAvatar';
 
 // Local dev config (gitignored – never shipped to production)
@@ -593,12 +591,15 @@ function LoadingScreenInner({ status }: { status: 'unlocking' | 'loadingSkills' 
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
+/** Background time after which the vault re-locks (see AppState listener in App) */
+const LOCK_GRACE_MS = 2 * 60 * 1000; // 2 minutes
+
 export default function App(): React.JSX.Element {
   // Vault state
   const [vaultUnlocked, setVaultUnlocked] = useState(false);
   const [vaultError, setVaultError] = useState<string | undefined>();
   const [initializing, setInitializing] = useState(true);
-  const [loadingStatus, setLoadingStatus] = useState<'unlocking' | 'loadingSkills'>('unlocking');
+  const [loadingStatus] = useState<'unlocking' | 'loadingSkills'>('unlocking');
 
   const [screen, setScreen] = useState<
     | 'home'
@@ -825,6 +826,9 @@ export default function App(): React.JSX.Element {
     }
 
     setHistoryLoading(false);
+    // Must stay stable: the auto-unlock effect below depends on this callback,
+    // so adding settings-derived deps would re-trigger the biometric prompt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load dark mode from AsyncStorage immediately (before biometric unlock)
@@ -884,7 +888,6 @@ export default function App(): React.JSX.Element {
   // should NOT re-lock the vault.
   // In driving mode, never auto-lock – the user expects hands-free operation.
   const backgroundAtRef = useRef<number | null>(null);
-  const LOCK_GRACE_MS = 2 * 60 * 1000; // 2 minutes
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
@@ -945,6 +948,8 @@ export default function App(): React.JSX.Element {
     if (settingsLoaded && vaultUnlocked) {
       savePreferences(tokenStore.current, settings);
     }
+    // Only preference fields trigger a save (keys/client IDs are persisted separately).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     settings.selectedProvider,
     settings.wakeWordEnabled,
@@ -980,8 +985,10 @@ export default function App(): React.JSX.Element {
 
   // Initialize services (audio only – auth services are configured reactively below)
   useEffect(() => {
-    ttsService.current.init();
-    sttService.current.init();
+    const tts = ttsService.current;
+    const stt = sttService.current;
+    tts.init();
+    stt.init();
 
     // Register setup handlers once (they are no-ops until the service is configured)
     spotifyAuth.current.registerSetupHandler();
@@ -1013,8 +1020,8 @@ export default function App(): React.JSX.Element {
     });
 
     return () => {
-      ttsService.current.destroy();
-      sttService.current.destroy();
+      tts.destroy();
+      stt.destroy();
     };
   }, []);
 
@@ -1024,11 +1031,9 @@ export default function App(): React.JSX.Element {
   useEffect(() => {
     if (!settingsLoaded) return;
 
-    const {
-      spotifyClientId: sClientId,
-      googleWebClientId: gClientId,
-      slackClientId: slClientId,
-    } = settings;
+    const sClientId = settings.spotifyClientId;
+    const gClientId = settings.googleWebClientId;
+    const slClientId = settings.slackClientId;
 
     if (sClientId) {
       spotifyAuth.current.configure(sClientId);
@@ -1057,14 +1062,12 @@ export default function App(): React.JSX.Element {
   useEffect(() => {
     if (!vaultUnlocked || !settingsLoaded) return;
 
-    const {
-      claudeApiKey,
-      openAIApiKey,
-      selectedProvider,
-      enabledSkillNames,
-      customApiKey,
-      customModelUrl,
-    } = settings;
+    const claudeApiKey = settings.claudeApiKey;
+    const openAIApiKey = settings.openAIApiKey;
+    const selectedProvider = settings.selectedProvider;
+    const enabledSkillNames = settings.enabledSkillNames;
+    const customApiKey = settings.customApiKey;
+    const customModelUrl = settings.customModelUrl;
     const apiKey =
       selectedProvider === 'claude'
         ? claudeApiKey
@@ -1216,6 +1219,9 @@ export default function App(): React.JSX.Element {
     settings.selectedProvider,
     settings.selectedOpenAIModel,
     settings.selectedClaudeModel,
+    settings.customApiKey,
+    settings.customModelUrl,
+    settings.customModelName,
     settings.enabledSkillNames,
     settings.drivingMode,
     settings.appLanguage,
@@ -1331,22 +1337,24 @@ export default function App(): React.JSX.Element {
   // Wake word management
   useEffect(() => {
     if (!vaultUnlocked) return;
-    const { wakeWordEnabled, wakeWordKey } = settings;
+    const wakeWord = wakeWordService.current;
+    const wakeWordEnabled = settings.wakeWordEnabled;
+    const wakeWordKey = settings.wakeWordKey;
 
     if (wakeWordEnabled && wakeWordKey) {
       permissionManager.current
         .isGranted('android.permission.RECORD_AUDIO')
         .then(granted => {
           if (granted) {
-            wakeWordService.current.start(handleWakeWordDetected, wakeWordKey);
+            wakeWord.start(handleWakeWordDetected, wakeWordKey);
           }
         });
     } else {
-      wakeWordService.current.stop();
+      wakeWord.stop();
     }
 
     return () => {
-      wakeWordService.current.stop();
+      wakeWord.stop();
     };
   }, [
     vaultUnlocked,

@@ -12,3 +12,7 @@ declare module '*.md' {
  */
 declare function btoa(data: string): string;
 declare function atob(data: string): string;
+
+declare class TextEncoder {
+  encode(input?: string): Uint8Array;
+}

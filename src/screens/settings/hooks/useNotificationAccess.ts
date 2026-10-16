@@ -29,7 +29,7 @@ export function useNotificationAccess(enabledSkillNames: string[]) {
       setTimeout(() => {
         checkNotificationAccess();
       }, 1000);
-    } catch (err) {
+    } catch {
       Alert.alert(t('alert.error'), t('notification.settingsError'));
     }
   }, [checkNotificationAccess]);

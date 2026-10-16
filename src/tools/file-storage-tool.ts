@@ -128,7 +128,7 @@ export class FileStorageTool implements Tool {
 
   private async readFile(
     filename: string | undefined,
-    fileType: FileType,
+    _fileType: FileType,
   ): Promise<ToolResult> {
     const name = this.sanitizeFilename(filename);
     if (!name) {

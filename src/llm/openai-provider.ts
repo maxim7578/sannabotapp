@@ -209,7 +209,7 @@ export class OpenAIProvider implements LLMProvider {
     };
     try {
       data = JSON.parse(rawText) as typeof data;
-    } catch (parseErr) {
+    } catch {
       const contentType = response.headers.get('content-type') ?? 'unknown';
       throw new Error(
         `Invalid JSON response from custom LLM endpoint\n` +
@@ -228,7 +228,7 @@ export class OpenAIProvider implements LLMProvider {
           string,
           unknown
         >;
-      } catch (parseErr) {
+      } catch {
         throw new Error(
           `Invalid JSON in tool call arguments for "${tc.function.name}"\n` +
             `Raw arguments: ${tc.function.arguments}`,

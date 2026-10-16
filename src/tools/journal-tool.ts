@@ -6,7 +6,7 @@
  */
 import type { Tool, ToolResult } from './types';
 import { errorResult, successResult } from './types';
-import { addEntry, getEntries, getEntry, deleteEntry, getEntriesByCategory, getCategories } from '../agent/journal-store';
+import { addEntry, getEntries, getEntry, deleteEntry, getEntriesByCategory } from '../agent/journal-store';
 
 type JournalAction = 'create' | 'list' | 'get' | 'delete' | 'list_by_category';
 
