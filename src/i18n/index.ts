@@ -14,11 +14,11 @@
  * 'system' resolves to the device locale via Intl API, then falls back to 'en'.
  */
 
-import { Platform } from 'react-native';
 import en from './locales/en';
 import de from './locales/de';
 
-export type Translations = typeof en;
+/** Same keys as the English locale, but any string value (other locales translate them) */
+export type Translations = { readonly [K in keyof typeof en]: string };
 export type TranslationKey = keyof Translations;
 
 type LocaleMap = Record<string, Translations>;

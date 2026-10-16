@@ -15,7 +15,7 @@
  *   6. Writes the final result to ConversationStore pending queue
  *   7. Brings SannaBot back to the foreground – the app then speaks the result via drainPending
  */
-import { SkillLoader, registerSkillContent } from './skill-loader';
+import { registerSkillContent } from './skill-loader';
 import { runNotificationSubAgent } from './notification-sub-agent';
 import type { NotificationPayload } from './notification-sub-agent';
 import { createLLMProvider } from '../llm/llm-registry';

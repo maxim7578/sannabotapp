@@ -27,7 +27,6 @@ import type { LLMProvider, Message } from '../llm/types';
 import AccessibilityModule from '../native/AccessibilityModule';
 import type { Tool, ToolResult } from '../tools/types';
 import { errorResult, successResult } from '../tools/types';
-import { DebugLogger } from './debug-logger';
 import { AccessibilityHintStore } from './accessibility-hint-store';
 import { AccessibilityTaskMemory } from './accessibility-task-memory';
 import { ActionHistoryTracker } from './accessibility-action-history';

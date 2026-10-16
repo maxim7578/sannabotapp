@@ -110,7 +110,6 @@ function makeRegex(
   after?: string,
   replaceFn?: (matches: RegExpExecArray) => string,
 ): string {
-  const matches: RegExpExecArray[] = [];
   let newDoc = doc;
   let match: RegExpExecArray | null;
 

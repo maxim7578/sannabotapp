@@ -424,8 +424,6 @@ export class DateTimeTool implements Tool {
   }
 
   private getBaseMoment(base: BaseEnum): moment.Moment {
-    const now = moment();
-
     switch (base) {
       case 'now':
         return moment();

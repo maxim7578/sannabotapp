@@ -9,7 +9,6 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import type { CredentialManager } from './credential-manager';
-import type { CredentialRequirement } from '../agent/skill-loader';
 
 const GOOGLE_SCOPES = [
   'email',
@@ -41,7 +40,7 @@ export class GoogleAuth {
   registerSetupHandler(): void {
     this.credentialManager.registerSetupHandler(
       'google',
-      async (cred: CredentialRequirement) => {
+      async () => {
         await this.signIn();
       },
     );
@@ -69,7 +68,7 @@ export class GoogleAuth {
       try { await GoogleSignin.revokeAccess(); } catch { /* ignore */ }
       try { await GoogleSignin.signOut(); } catch { /* ignore */ }
 
-      const userInfo = await GoogleSignin.signIn();
+      await GoogleSignin.signIn();
 
       // Request any scopes that weren't granted during signIn
       // (belt-and-suspenders: ensures all GOOGLE_SCOPES are present)
